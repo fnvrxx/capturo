@@ -9,19 +9,19 @@ export const useAuthStore = create(
       isAuthenticated: false,
 
       login: (user, token) => {
-        localStorage.setItem('captuto_token', token);
+        localStorage.setItem('capturo_token', token);
         set({ user, token, isAuthenticated: true });
       },
 
       logout: () => {
-        localStorage.removeItem('captuto_token');
+        localStorage.removeItem('capturo_token');
         set({ user: null, token: null, isAuthenticated: false });
       },
 
       setUser: (user) => set({ user }),
     }),
     {
-      name: 'captuto_auth',
+      name: 'capturo_auth',
       partialize: (state) => ({ user: state.user, token: state.token, isAuthenticated: state.isAuthenticated }),
     }
   )

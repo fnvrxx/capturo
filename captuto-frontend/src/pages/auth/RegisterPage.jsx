@@ -38,18 +38,19 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-[380px]">
-        <div className="flex justify-center mb-6">
+        <div className="flex flex-col items-center gap-1 mb-6">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 bg-[#534AB7] rounded-xl flex items-center justify-center">
               <Camera size={20} className="text-white" />
             </div>
-            <span className="text-xl font-medium text-[#534AB7]">Captuto</span>
+            <span className="text-xl font-medium text-[#534AB7]">Capturo</span>
           </div>
+          <p className="text-xs text-gray-400">Scan, Extract, Beres</p>
         </div>
 
         <div className="bg-white border border-gray-200 rounded-xl p-8">
           <h2 className="font-medium text-gray-900 text-lg mb-1">Create account</h2>
-          <p className="text-sm text-gray-400 mb-6">Join Captuto and automate your data entry</p>
+          <p className="text-sm text-gray-400 mb-6">Join Capturo and automate your data entry</p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <Input

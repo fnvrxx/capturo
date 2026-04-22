@@ -6,7 +6,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('captuto_token');
+  const token = localStorage.getItem('capturo_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -15,7 +15,7 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem('captuto_token');
+      localStorage.removeItem('capturo_token');
       window.location.href = '/login';
     }
     return Promise.reject(err);

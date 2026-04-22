@@ -34,7 +34,7 @@ export default function Sidebar() {
           <div className="w-7 h-7 bg-[#534AB7] rounded-lg flex items-center justify-center">
             <Camera size={15} className="text-white" />
           </div>
-          <span className="font-medium text-[#534AB7] text-base">Captuto</span>
+          <span className="font-medium text-[#534AB7] text-base">Capturo</span>
         </div>
       </div>
 

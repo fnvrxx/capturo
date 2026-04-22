@@ -9,7 +9,7 @@ const pageTitles = {
 
 export default function Topbar() {
   const { pathname } = useLocation();
-  const title = pageTitles[pathname] || 'Captuto';
+  const title = pageTitles[pathname] || 'Capturo';
 
   return (
     <header className="h-[52px] bg-white border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-20">

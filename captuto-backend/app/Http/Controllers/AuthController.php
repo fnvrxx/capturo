@@ -18,7 +18,7 @@ class AuthController extends Controller
     public function register(RegisterRequest $request): JsonResponse
     {
         $user = User::create($request->validated());
-        $token = $user->createToken('captuto-token')->plainTextToken;
+        $token = $user->createToken('capturo-token')->plainTextToken;
 
         return $this->success([
             'user'  => new UserResource($user),
@@ -34,7 +34,7 @@ class AuthController extends Controller
 
         $user = Auth::user();
         $user->tokens()->delete();
-        $token = $user->createToken('captuto-token')->plainTextToken;
+        $token = $user->createToken('capturo-token')->plainTextToken;
 
         return $this->success([
             'user'  => new UserResource($user),

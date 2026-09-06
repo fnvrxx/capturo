@@ -11,12 +11,13 @@ import {
   formatConfidence,
 } from "../../utils/confidenceHelpers";
 import toast from "react-hot-toast";
+import { ocrAuditResult } from '../../utils/ocrPreview';
 
-export default function AutoFillForm({ onSaved, onRetake }) {
-  const { selectedTemplate, tempJsonData } = useOcrStore();
+export default function AutoFillForm({ onSaved, onRetake, onChangeTemplate }) {
+  const { selectedTemplate, ocrResult } = useOcrStore();
   const fields = selectedTemplate?.fields || [];
-  const rawFields = tempJsonData?.raw_fields || {};
-  const confidenceScores = tempJsonData?.confidence_scores || {};
+  const rawFields = ocrResult?.raw_fields || {};
+  const confidenceScores = ocrResult?.confidence_scores || {};
 
   const [values, setValues] = useState(() => {
     const init = {};
@@ -37,8 +38,8 @@ export default function AutoFillForm({ onSaved, onRetake }) {
     try {
       await recordService.create({
         template_id: selectedTemplate.id,
-        scanned_at: tempJsonData?.scanned_at || new Date().toISOString(),
-        raw_json: tempJsonData || {},
+        scanned_at: ocrResult?.scanned_at || new Date().toISOString(),
+        raw_json: ocrAuditResult(ocrResult),
         data: values,
         confidence_scores: confidenceScores,
         document_image: null,
@@ -56,8 +57,7 @@ export default function AutoFillForm({ onSaved, onRetake }) {
   return (
     <div>
       <div className="bg-[#EEEDFE] border border-[#534AB7]/20 rounded-lg px-4 py-3 mb-6 text-sm text-[#3C3489]">
-        Azure Document Intelligence has finished processing. Review and edit
-        fields if needed before saving to database.
+        PaddleOCR selesai memproses dokumen. Periksa dan koreksi field sebelum menyimpan.
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -123,6 +123,9 @@ export default function AutoFillForm({ onSaved, onRetake }) {
         </Button>
         <Button variant="secondary" onClick={onRetake}>
           Retake Document Photo
+        </Button>
+        <Button variant="outline" onClick={onChangeTemplate}>
+          Change Template
         </Button>
       </div>
     </div>

@@ -4,15 +4,17 @@ import { Camera } from 'lucide-react';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import { authService } from '../../services/authService';
+import { authErrorMessage } from '../../services/authErrors';
 import { useAuthStore } from '../../store/authStore';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuthStore();
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
+  const { register, handleSubmit, setError, clearErrors, formState: { errors, isSubmitting } } = useForm();
 
   const onSubmit = async (data) => {
+    clearErrors();
     try {
       const res = await authService.login(data);
       const { user, token } = res.data.data;
@@ -20,7 +22,8 @@ export default function LoginPage() {
       navigate('/');
       toast.success(`Welcome back, ${user.name.split(' ')[0]}!`);
     } catch (err) {
-      const msg = err.response?.data?.message || 'Login failed';
+      const msg = authErrorMessage(err);
+      setError('root.server', { message: msg });
       toast.error(msg);
     }
   };
@@ -43,6 +46,7 @@ export default function LoginPage() {
           <p className="text-sm text-gray-400 mb-6">Welcome back to Capturo</p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+            {errors.root?.server && <p role="alert" className="text-sm text-red-600">{errors.root.server.message}</p>}
             <Input
               label="Email"
               type="email"

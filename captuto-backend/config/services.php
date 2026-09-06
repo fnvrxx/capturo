@@ -35,9 +35,10 @@ return [
         ],
     ],
 
-    'azure_ocr' => [
-        'endpoint' => env('AZURE_OCR_ENDPOINT'),
-        'key'      => env('AZURE_OCR_KEY'),
+    'paddle_ocr' => [
+        'url' => env('PADDLE_OCR_URL'),
+        'token' => env('PADDLE_OCR_TOKEN'),
+        'timeout' => env('PADDLE_OCR_TIMEOUT', 90),
     ],
 
 ];

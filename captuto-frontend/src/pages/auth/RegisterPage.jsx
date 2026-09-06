@@ -1,19 +1,21 @@
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { Camera } from 'lucide-react';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import { authService } from '../../services/authService';
+import { authErrorMessage } from '../../services/authErrors';
 import { useAuthStore } from '../../store/authStore';
 import toast from 'react-hot-toast';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { login } = useAuthStore();
-  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm();
-  const password = watch('password');
+  const { register, handleSubmit, control, setError, clearErrors, formState: { errors, isSubmitting } } = useForm();
+  const password = useWatch({ control, name: 'password' });
 
   const onSubmit = async (data) => {
+    clearErrors();
     try {
       const res = await authService.register({
         name: data.name,
@@ -27,10 +29,12 @@ export default function RegisterPage() {
       navigate('/');
       toast.success('Account created!');
     } catch (err) {
-      const errors = err.response?.data?.errors;
-      const msg = errors
-        ? Object.values(errors).flat()[0]
-        : err.response?.data?.message || 'Registration failed';
+      const msg = authErrorMessage(err);
+      for (const [field, messages] of Object.entries(err.response?.data?.errors || {})) {
+        const formField = field === 'password_confirmation' ? 'confirm_password' : field;
+        setError(formField, { type: 'server', message: Array.isArray(messages) ? messages[0] : messages });
+      }
+      setError('root.server', { message: msg });
       toast.error(msg);
     }
   };
@@ -53,6 +57,7 @@ export default function RegisterPage() {
           <p className="text-sm text-gray-400 mb-6">Join Capturo and automate your data entry</p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+            {errors.root?.server && <p role="alert" className="text-sm text-red-600">{errors.root.server.message}</p>}
             <Input
               label="Full Name"
               placeholder="Your full name"

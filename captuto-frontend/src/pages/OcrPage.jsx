@@ -2,26 +2,19 @@ import { useEffect, useState } from 'react';
 import StepBar from '../components/ui/StepBar';
 import TemplateSelector from '../components/ocr/TemplateSelector';
 import DocumentUploader from '../components/ocr/DocumentUploader';
-import ConfirmationPanel from '../components/ocr/ConfirmationPanel';
 import AutoFillForm from '../components/ocr/AutoFillForm';
+import BoundingBoxPreview from '../components/ocr/BoundingBoxPreview';
 import { useOcrStore } from '../store/ocrStore';
 import { useTemplateStore } from '../store/templateStore';
 
 export default function OcrPage() {
   const [step, setStep] = useState(1);
-  const { resetOcr, setUploadedFile, setTempJson, tempJsonData } = useOcrStore();
+  const { resetOcr, setUploadedFile, setOcrResult } = useOcrStore();
   const { fetchTemplates } = useTemplateStore();
 
   useEffect(() => {
     fetchTemplates();
-  }, []);
-
-  const handleConfirm = () => {
-    if (!tempJsonData) return;
-    // Hanya update status — data raw_fields dan confidence_scores dari Azure/simulasi tetap dipakai
-    setTempJson({ ...tempJsonData, status: 'confirmed' });
-    setStep(4);
-  };
+  }, [fetchTemplates]);
 
   const handleChangeTemplate = () => {
     resetOcr();
@@ -30,7 +23,7 @@ export default function OcrPage() {
 
   const handleRetake = () => {
     setUploadedFile(null);
-    setTempJson(null);
+    setOcrResult(null);
     setStep(2);
   };
 
@@ -45,16 +38,11 @@ export default function OcrPage() {
 
       {step === 1 && <TemplateSelector onNext={() => setStep(2)} />}
       {step === 2 && <DocumentUploader onNext={() => setStep(3)} onBack={() => setStep(1)} />}
-      {step === 3 && (
-        <ConfirmationPanel
-          onConfirm={handleConfirm}
-          onChangeTemplate={handleChangeTemplate}
-          onRetake={handleRetake}
-        />
-      )}
+      {step === 3 && <BoundingBoxPreview onNext={() => setStep(4)} onRetake={handleRetake} />}
       {step === 4 && (
         <AutoFillForm
           onSaved={handleSaved}
+          onChangeTemplate={handleChangeTemplate}
           onRetake={handleRetake}
         />
       )}

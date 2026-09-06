@@ -1,6 +1,6 @@
 import { Check } from 'lucide-react';
 
-const steps = ['Select Template', 'Upload Document', 'Confirm', 'Auto-fill & Save'];
+const steps = ['Select Template', 'Upload Document', 'Bounding Box Preview', 'Review & Save'];
 
 export default function StepBar({ currentStep }) {
   return (
@@ -24,7 +24,7 @@ export default function StepBar({ currentStep }) {
                 {isDone ? <Check size={14} /> : stepNum}
               </div>
               <span
-                className={`text-xs whitespace-nowrap
+                className={`text-[10px] sm:text-xs text-center max-w-24 sm:max-w-none
                   ${isActive ? 'text-[#534AB7] font-medium' : ''}
                   ${isDone ? 'text-green-600' : ''}
                   ${isFuture ? 'text-gray-400' : ''}

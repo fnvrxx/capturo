@@ -1,6 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { boxPolygon, confidenceLabel, ocrAuditResult } from '../src/utils/ocrPreview.js';
+import { boxPolygon, confidenceLabel, ocrAuditResult, pageLines } from '../src/utils/ocrPreview.js';
+
+test('PDF boxes stay on their own page, including flat legacy responses', () => {
+  const first = { text: 'First', page_index: 0 };
+  const second = { text: 'Second', page_index: 1 };
+  const result = { ocr_lines: [first, second] };
+  assert.deepEqual(pageLines(result, 0), [first]);
+  assert.deepEqual(pageLines(result, 1), [second]);
+  assert.deepEqual(pageLines({ ocr_lines: [{ text: 'Legacy' }] }, 1), []);
+  assert.deepEqual(pageLines({ ...result, ocr_pages: [{ lines: [] }] }, 0), []);
+});
 
 test('rectangle and rotated polygon coordinates are preserved in source pixels', () => {
   assert.deepEqual(boxPolygon([10, 20, 60, 80]), [[10, 20], [60, 20], [60, 80], [10, 80]]);

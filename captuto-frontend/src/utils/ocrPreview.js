@@ -1,3 +1,12 @@
+export function pageLines(result, pageIndex) {
+  const page = result?.ocr_pages?.[pageIndex];
+  if (Array.isArray(page?.lines)) return page.lines;
+  const lines = result?.ocr_lines || [];
+  const index = page?.page_index ?? pageIndex;
+  // Legacy untagged results can only be associated with the first page.
+  return lines.filter((line) => (line.page_index ?? 0) === index);
+}
+
 export function boxPolygon(box) {
   if (!Array.isArray(box)) return [];
   if (box.length === 4 && box.every(Number.isFinite)) {

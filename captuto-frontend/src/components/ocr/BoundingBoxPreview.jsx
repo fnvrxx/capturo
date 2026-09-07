@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useOcrStore } from '../../store/ocrStore';
-import { boxPolygon, confidenceColor, confidenceLabel } from '../../utils/ocrPreview';
+import { boxPolygon, confidenceColor, confidenceLabel, pageLines } from '../../utils/ocrPreview';
 import Button from '../ui/Button';
+import PdfPagePreview from './PdfPagePreview';
 
 function PageOverlay({ page, lines, selected, onSelect, zoom }) {
   const width = Number(page.width);
@@ -57,25 +58,30 @@ function LegacyImage({ file, ...props }) {
 }
 
 export default function BoundingBoxPreview({ onNext, onRetake }) {
-  const { ocrResult, uploadedFile } = useOcrStore();
+  const { ocrResult, uploadedFile, selectedTemplate, assignBoxToField } = useOcrStore();
+  const [targetField, setTargetField] = useState('');
+  const [assignmentMessage, setAssignmentMessage] = useState('');
   const [pageNumber, setPageNumber] = useState(0);
   const [selected, setSelected] = useState(null);
   const [zoom, setZoom] = useState(100);
+  const [pdfPageCount, setPdfPageCount] = useState(0);
+  const isPdf = uploadedFile?.type === 'application/pdf' || /\.pdf$/i.test(uploadedFile?.name || '');
   const pages = ocrResult?.ocr_pages || [];
   const page = pages[pageNumber];
-  const lines = page?.lines || ocrResult?.ocr_lines || [];
+  const pageCount = Math.max(1, pages.length, pdfPageCount);
+  const lines = pageLines(ocrResult, pageNumber);
   const activeLine = selected === null ? null : lines[selected];
   const overlayProps = { lines, selected, onSelect: setSelected, zoom };
   return (
     <section>
       <div className="mb-5">
         <h2 className="text-lg font-semibold text-gray-900">Bounding Box Preview</h2>
-        <p className="text-sm text-gray-500 mt-1">Periksa area teks dan confidence pembacaan PaddleOCR. Pilih kotak atau baris untuk melihat detail.</p>
+        <p className="text-sm text-gray-500 mt-1">Pilih kotak atau teks hasil OCR, pilih field template tujuan, lalu terapkan. Nilainya akan masuk ke form review.</p>
       </div>
       <div className="flex flex-wrap items-center gap-3 mb-4 text-sm">
         <label className="flex items-center gap-2">Halaman
           <select aria-label="Halaman dokumen" value={pageNumber} onChange={(event) => { setPageNumber(Number(event.target.value)); setSelected(null); }} className="border border-gray-200 rounded-lg p-2">
-            {Array.from({ length: Math.max(1, pages.length) }, (_, index) => <option key={index} value={index}>{index + 1} / {Math.max(1, pages.length)}</option>)}
+            {Array.from({ length: pageCount }, (_, index) => <option key={index} value={index}>{index + 1} / {pageCount}</option>)}
           </select>
         </label>
         <label className="flex items-center gap-2">Zoom
@@ -93,7 +99,10 @@ export default function BoundingBoxPreview({ onNext, onRetake }) {
       </div>
       <div className="grid lg:grid-cols-[minmax(0,1fr)_320px] gap-4">
         <div className="rounded-xl border border-gray-200 bg-gray-100 overflow-auto max-h-[70vh]">
-          {page?.image ? <PageOverlay page={page} {...overlayProps} /> : uploadedFile?.type.startsWith('image/') ? (
+          {page?.image ? <PageOverlay page={page} {...overlayProps} /> : isPdf ? (
+            <PdfPagePreview file={uploadedFile} pageIndex={pageNumber} metadata={page} onPageCount={setPdfPageCount}
+              renderPage={(raster, hasCoordinates) => <PageOverlay page={raster} {...overlayProps} lines={hasCoordinates ? lines : []} />} />
+          ) : uploadedFile?.type.startsWith('image/') ? (
             <LegacyImage file={uploadedFile} {...overlayProps} />
           ) : <p className="p-6 text-sm text-gray-600">Pratinjau halaman belum tersedia untuk dokumen ini. Unggah ulang setelah layanan OCR diperbarui.</p>}
         </div>
@@ -116,10 +125,32 @@ export default function BoundingBoxPreview({ onNext, onRetake }) {
           <div className="p-4 border-t border-gray-100 text-sm" aria-live="polite">
             {activeLine ? <><p className="font-medium break-words">{activeLine.text}</p><p className="mt-1 text-gray-500">Confidence: {confidenceLabel(activeLine.confidence)}</p></> : <p className="text-gray-500">Pilih salah satu kotak untuk melihat detail.</p>}
           </div>
+          <div className="p-4 border-t border-gray-100 space-y-3 text-sm">
+            <label className="block" htmlFor="ocr-target-field">Masukkan ke field template</label>
+            <select id="ocr-target-field" value={targetField} onChange={(event) => { setTargetField(event.target.value); setAssignmentMessage(''); }} className="w-full border rounded-lg p-2">
+              <option value="">Pilih field tujuan</option>
+              {(selectedTemplate?.fields || []).map((field) => <option key={field.id ?? field.name} value={field.name}>{field.name}</option>)}
+            </select>
+            {targetField && <p className="text-gray-500 break-words">Nilai saat ini: {ocrResult?.raw_fields?.[targetField] || '—'}. Menerapkan kotak akan mengganti nilai ini.</p>}
+            <Button disabled={!targetField || !String(activeLine?.text ?? '').trim()} onClick={() => {
+              assignBoxToField(targetField, pageNumber, selected);
+              setAssignmentMessage(`${targetField} diisi dengan “${activeLine.text}”.`);
+            }}>Gunakan teks untuk field</Button>
+            <p role="status" className="text-green-700 break-words">{assignmentMessage}</p>
+          </div>
         </div>
       </div>
+      <div className="mt-5 border rounded-xl p-4">
+        <h3 className="font-medium text-sm mb-3">Hasil field template</h3>
+        <dl className="grid sm:grid-cols-2 gap-3 text-sm">
+          {(selectedTemplate?.fields || []).map((field) => <div key={field.id ?? field.name}>
+            <dt className="text-gray-500">{field.name}{ocrResult?.manual_mappings?.[field.name] && <span className="text-[#534AB7]"> · Dipilih dari kotak OCR</span>}</dt>
+            <dd className="break-words">{ocrResult?.raw_fields?.[field.name] ?? '—'}</dd>
+          </div>)}
+        </dl>
+      </div>
       <div className="flex flex-wrap justify-between gap-3 mt-6">
-        <Button variant="secondary" onClick={onRetake}>← Unggah ulang</Button>
+        <Button variant="secondary" onClick={onRetake}>Lewati dokumen</Button>
         <Button onClick={onNext}>Lanjut ke Review &amp; Save →</Button>
       </div>
     </section>

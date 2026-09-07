@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Card from "../ui/Card";
-import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import ConfidenceBar from "../ui/ConfidenceBar";
 import { useOcrStore } from "../../store/ocrStore";
@@ -13,16 +12,18 @@ import {
 import toast from "react-hot-toast";
 import { ocrAuditResult } from '../../utils/ocrPreview';
 
-export default function AutoFillForm({ onSaved, onRetake, onChangeTemplate }) {
+export default function AutoFillForm({ onSaved, onSkip }) {
   const { selectedTemplate, ocrResult } = useOcrStore();
   const fields = selectedTemplate?.fields || [];
   const rawFields = ocrResult?.raw_fields || {};
   const confidenceScores = ocrResult?.confidence_scores || {};
+  const isTable = ocrResult?.source?.type === 'spreadsheet';
+  const saveLock = useRef(false);
 
   const [values, setValues] = useState(() => {
     const init = {};
     fields.forEach((f) => {
-      init[f.name] = rawFields[f.name] || "";
+      init[f.name] = rawFields[f.name] ?? "";
     });
     return init;
   });
@@ -34,6 +35,8 @@ export default function AutoFillForm({ onSaved, onRetake, onChangeTemplate }) {
     : 0;
 
   const handleSave = async () => {
+    if (saveLock.current) return;
+    saveLock.current = true;
     setSaving(true);
     try {
       await recordService.create({
@@ -50,6 +53,7 @@ export default function AutoFillForm({ onSaved, onRetake, onChangeTemplate }) {
       const msg = err.response?.data?.message || "Failed to save record";
       toast.error(msg);
     } finally {
+      saveLock.current = false;
       setSaving(false);
     }
   };
@@ -57,17 +61,16 @@ export default function AutoFillForm({ onSaved, onRetake, onChangeTemplate }) {
   return (
     <div>
       <div className="bg-[#EEEDFE] border border-[#534AB7]/20 rounded-lg px-4 py-3 mb-6 text-sm text-[#3C3489]">
-        PaddleOCR selesai memproses dokumen. Periksa dan koreksi field sebelum menyimpan.
+        {isTable ? 'Data diambil dari kolom yang cocok dengan template. Periksa setiap baris sebelum menyimpan.' : 'PaddleOCR selesai memproses dokumen. Periksa dan koreksi field sebelum menyimpan.'}
       </div>
+      {!!ocrResult?.missing_fields?.length && <p className="text-sm text-amber-700 mb-4">Kolom tidak ditemukan, isi manual bila diperlukan: {ocrResult.missing_fields.join(', ')}.</p>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {fields.map((field) => {
-          const score = confidenceScores[field.name] ?? 0.85;
+          const score = confidenceScores[field.name] ?? 0;
           const level = getConfidenceLevel(score);
           const badgeClass = getConfidenceBadgeClass(level);
-          const isLow = level === "low";
-          const isMedium = level === "medium";
-          const isEditable = isLow || isMedium;
+          const isLow = !isTable && level === "low";
 
           return (
             <Card key={field.id} className={isLow ? "border-red-200" : ""}>
@@ -75,16 +78,17 @@ export default function AutoFillForm({ onSaved, onRetake, onChangeTemplate }) {
                 <span className="text-xs text-gray-400 font-medium uppercase tracking-wide">
                   {field.name}
                 </span>
-                <span
+                {!isTable && <span
                   className={`text-xs px-2 py-0.5 rounded-full font-medium ${badgeClass}`}
                 >
                   {level.charAt(0).toUpperCase() + level.slice(1)} ·{" "}
                   {formatConfidence(score)}
-                </span>
+                </span>}
               </div>
 
-              {isEditable ? (
                 <input
+                  aria-label={field.name}
+                  disabled={saving}
                   className={`w-full h-9 px-3 border rounded-lg text-sm outline-none mb-2
                     ${isLow ? "border-red-300 focus:border-red-400" : "border-gray-200 focus:border-[#534AB7]"}`}
                   value={values[field.name]}
@@ -94,38 +98,31 @@ export default function AutoFillForm({ onSaved, onRetake, onChangeTemplate }) {
                       [field.name]: e.target.value,
                     }))
                   }
-                  placeholder={isLow ? "Required — enter manually" : undefined}
+                  placeholder="Isi atau koreksi nilai"
                 />
-              ) : (
-                <p className="font-medium text-gray-900 text-sm mb-2">
-                  {values[field.name] || "—"}
-                </p>
-              )}
 
-              <ConfidenceBar score={score} />
+              {!isTable && <ConfidenceBar score={score} />}
+              {ocrResult?.manual_mappings?.[field.name] && <p className="text-xs text-[#534AB7] mt-2">Dipilih dari kotak OCR · halaman {ocrResult.manual_mappings[field.name].page_index + 1}. Nilai tetap dapat dikoreksi.</p>}
             </Card>
           );
         })}
       </div>
 
-      <div className="flex items-center justify-between mb-6 text-sm text-gray-500">
+      {!isTable && <div className="flex items-center justify-between mb-6 text-sm text-gray-500">
         <span>
           Average confidence:{" "}
           <strong className="text-gray-800">
             {formatConfidence(avgConfidence)}
           </strong>
         </span>
-      </div>
+      </div>}
 
       <div className="flex items-center gap-3">
         <Button onClick={handleSave} disabled={saving}>
           {saving ? "Saving..." : "Save to Database"}
         </Button>
-        <Button variant="secondary" onClick={onRetake}>
-          Retake Document Photo
-        </Button>
-        <Button variant="outline" onClick={onChangeTemplate}>
-          Change Template
+        <Button variant="secondary" onClick={onSkip} disabled={saving}>
+          Lewati record
         </Button>
       </div>
     </div>

@@ -1,35 +1,34 @@
-import { useState } from 'react';
-import { Plus, X, ArrowLeft } from 'lucide-react';
-import Card from '../ui/Card';
-import Button from '../ui/Button';
-import Input from '../ui/Input';
-import Select from '../ui/Select';
-import Badge from '../ui/Badge';
-import { useTemplateStore } from '../../store/templateStore';
-import toast from 'react-hot-toast';
+import { useState } from "react";
+import { Plus, X, ArrowLeft } from "lucide-react";
+import Card from "../ui/Card";
+import Button from "../ui/Button";
+import Input from "../ui/Input";
+import Select from "../ui/Select";
+import Badge from "../ui/Badge";
+import { useTemplateStore } from "../../store/templateStore";
+import toast from "react-hot-toast";
 
 const FIELD_TYPES = [
-  { value: 'text', label: 'Text' },
-  { value: 'number', label: 'Number' },
-  { value: 'date', label: 'Date' },
-  { value: 'currency', label: 'Currency' },
-  { value: 'email', label: 'Email' },
+  { value: "text", label: "Text" },
+  { value: "number", label: "Number" },
+  { value: "date", label: "Date" },
+  { value: "email", label: "Email" },
 ];
 
 const TYPE_COLORS = {
-  text: 'blue',
-  number: 'purple',
-  date: 'green',
-  currency: 'amber',
-  email: 'gray',
+  text: "blue",
+  number: "purple",
+  date: "green",
+  currency: "amber",
+  email: "gray",
 };
 
 export default function TemplateBuilder({ onBack }) {
   const { createTemplate } = useTemplateStore();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [fieldName, setFieldName] = useState('');
-  const [fieldType, setFieldType] = useState('text');
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [fieldName, setFieldName] = useState("");
+  const [fieldType, setFieldType] = useState("text");
   const [fields, setFields] = useState([]);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
@@ -37,8 +36,8 @@ export default function TemplateBuilder({ onBack }) {
   const addField = () => {
     if (!fieldName.trim()) return;
     setFields((prev) => [...prev, { name: fieldName.trim(), type: fieldType }]);
-    setFieldName('');
-    setFieldType('text');
+    setFieldName("");
+    setFieldType("text");
   };
 
   const removeField = (idx) => {
@@ -47,8 +46,8 @@ export default function TemplateBuilder({ onBack }) {
 
   const handleSave = async () => {
     const newErrors = {};
-    if (!name.trim()) newErrors.name = 'Template name is required';
-    if (!fields.length) newErrors.fields = 'Add at least one field';
+    if (!name.trim()) newErrors.name = "Template name is required";
+    if (!fields.length) newErrors.fields = "Add at least one field";
     if (Object.keys(newErrors).length) {
       setErrors(newErrors);
       return;
@@ -57,10 +56,10 @@ export default function TemplateBuilder({ onBack }) {
     setSaving(true);
     try {
       await createTemplate({ name: name.trim(), description, fields });
-      toast.success('Template created');
+      toast.success("Template created");
       onBack();
     } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to create template';
+      const msg = err.response?.data?.message || "Failed to create template";
       toast.error(msg);
     } finally {
       setSaving(false);
@@ -69,7 +68,10 @@ export default function TemplateBuilder({ onBack }) {
 
   return (
     <div>
-      <button onClick={onBack} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 mb-5 cursor-pointer transition-colors">
+      <button
+        onClick={onBack}
+        className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 mb-5 cursor-pointer transition-colors"
+      >
         <ArrowLeft size={15} />
         Back to templates
       </button>
@@ -87,7 +89,9 @@ export default function TemplateBuilder({ onBack }) {
               error={errors.name}
             />
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">Description</label>
+              <label className="text-sm font-medium text-gray-700">
+                Description
+              </label>
               <textarea
                 placeholder="Optional description..."
                 value={description}
@@ -100,24 +104,32 @@ export default function TemplateBuilder({ onBack }) {
 
           <div className="border-t border-gray-100 my-5" />
 
-          <h3 className="font-medium text-gray-800 text-sm mb-3">Add New Field</h3>
+          <h3 className="font-medium text-gray-800 text-sm mb-3">
+            Add New Field
+          </h3>
           <div className="flex flex-col gap-3">
             <Input
               placeholder="Field name (e.g. Invoice Number)"
               value={fieldName}
               onChange={(e) => setFieldName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && addField()}
+              onKeyDown={(e) => e.key === "Enter" && addField()}
             />
             <Select
               options={FIELD_TYPES}
               value={fieldType}
               onChange={(e) => setFieldType(e.target.value)}
             />
-            <Button variant="outline" onClick={addField} disabled={!fieldName.trim()}>
+            <Button
+              variant="outline"
+              onClick={addField}
+              disabled={!fieldName.trim()}
+            >
               <Plus size={14} />
               Add Field
             </Button>
-            {errors.fields && <p className="text-xs text-red-500">{errors.fields}</p>}
+            {errors.fields && (
+              <p className="text-xs text-red-500">{errors.fields}</p>
+            )}
           </div>
         </Card>
 
@@ -132,12 +144,18 @@ export default function TemplateBuilder({ onBack }) {
             ) : (
               <div className="flex flex-col gap-2">
                 {fields.map((f, idx) => (
-                  <div key={idx} className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg border border-gray-100">
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg border border-gray-100"
+                  >
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-800">{f.name}</span>
                       <Badge color={TYPE_COLORS[f.type]}>{f.type}</Badge>
                     </div>
-                    <button onClick={() => removeField(idx)} className="text-gray-300 hover:text-red-400 transition-colors cursor-pointer">
+                    <button
+                      onClick={() => removeField(idx)}
+                      className="text-gray-300 hover:text-red-400 transition-colors cursor-pointer"
+                    >
                       <X size={14} />
                     </button>
                   </div>
@@ -148,7 +166,7 @@ export default function TemplateBuilder({ onBack }) {
 
           <div className="mt-6 pt-4 border-t border-gray-100">
             <Button className="w-full" onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving...' : 'Save Template'}
+              {saving ? "Saving..." : "Save Template"}
             </Button>
           </div>
         </Card>

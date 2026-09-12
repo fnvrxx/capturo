@@ -8,22 +8,26 @@ Capturo adalah aplikasi untuk mengubah dokumen seperti invoice, nota, dan formul
   <img src="https://skillicons.dev/icons?i=react,vite,tailwind,laravel,php,python,fastapi,sqlite" alt="React, Vite, Tailwind CSS, Laravel, PHP, Python, FastAPI, dan SQLite" />
 </p>
 
-| Bagian | Teknologi |
-| --- | --- |
-| Frontend | React, Vite, Tailwind CSS, Zustand, Axios, PDF.js, SheetJS |
-| Backend | Laravel, PHP, Laravel Sanctum, Maatwebsite Excel |
-| OCR Service | Python, FastAPI, PaddleOCR, PaddleX, Uvicorn |
-| Database | SQLite secara default; mendukung MySQL dan PostgreSQL melalui Laravel |
-| Infrastruktur OCR | Kaggle dan zrok tunnel |
+| Bagian            | Teknologi                                                             |
+| ----------------- | --------------------------------------------------------------------- |
+| Frontend          | React, Vite, Tailwind CSS, Zustand, Axios, PDF.js, SheetJS            |
+| Backend           | Laravel, PHP, Laravel Sanctum, Maatwebsite Excel                      |
+| OCR Service       | Python, FastAPI, PaddleOCR, PaddleX, Uvicorn                          |
+| Database          | SQLite secara default; mendukung MySQL dan PostgreSQL melalui Laravel |
+| Infrastruktur OCR | Kaggle dan zrok tunnel                                                |
+
+## Live Demo
+
+[Live Demo](https://drive.google.com/file/d/1DB0Xugf50qL38j3bu_nNG9MhDFcuqAw8/view?usp=sharing)
 
 ## Struktur Folder
 
-| Folder | Deskripsi |
-| --- | --- |
+| Folder              | Deskripsi                                                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | `captuto-frontend/` | Antarmuka Capturo untuk autentikasi, pengelolaan template, upload dokumen, preview bounding box, review, dan ekspor data. |
-| `captuto-backend/` | REST API Laravel untuk autentikasi, template, record, integrasi OCR, dan penyimpanan data. |
-| `paddleocr-kaggle/` | Service PaddleOCR, notebook Kaggle, serta panduan menjalankan OCR melalui zrok. |
-| `deep-dive/` | Catatan teknis yang menjelaskan arsitektur dan pola implementasi utama proyek. |
+| `captuto-backend/`  | REST API Laravel untuk autentikasi, template, record, integrasi OCR, dan penyimpanan data.                                |
+| `paddleocr-kaggle/` | Service PaddleOCR, notebook Kaggle, serta panduan menjalankan OCR melalui zrok.                                           |
+| `deep-dive/`        | Catatan teknis yang menjelaskan arsitektur dan pola implementasi utama proyek.                                            |
 
 ## Define Problem
 
